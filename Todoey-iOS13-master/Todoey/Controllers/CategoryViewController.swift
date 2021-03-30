@@ -1,17 +1,17 @@
 //
-//  ViewController.swift
+//  CategoryViewController.swift
 //  Todoey
 //
-//  Created by Philipp Muellauer on 02/12/2019.
-//  Copyright © 2019 App Brewery. All rights reserved.
+//  Created by Volchenkov, Sergey on 3/30/21.
+//  Copyright © 2021 App Brewery. All rights reserved.
 //
 
 import UIKit
 import CoreData
 
-class TodoListViewController: UITableViewController {
+class CategoryViewController: UITableViewController {
     
-    var itemArray = [Item]()
+    var categoryArray = [Category]()
     let defaults = UserDefaults.standard
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
@@ -21,52 +21,42 @@ class TodoListViewController: UITableViewController {
         loadItems()
     }
     
+    // MARK: - Table view data source
     
-    // Return the number of rows for the table.
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemArray.count
+        return categoryArray.count
     }
     
     // Provide a cell object for each row.
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // Fetch a cell of the appropriate type.
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         
         // Configure the cell’s contents.
-        cell.textLabel?.text = itemArray[indexPath.row].title
-        cell.accessoryType = itemArray[indexPath.row].done == true ? .checkmark : .none
+        cell.textLabel?.text = categoryArray[indexPath.row].name
+        // cell.accessoryType = categoryArray[indexPath.row].done == true ? .checkmark : .none
         return cell
     }
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-        context.delete(itemArray[indexPath.row])
-        itemArray.remove(at: indexPath.row)
-        self.saveItems()
-        tableView.deselectRow(at: indexPath, animated: true)
-    }
-    
-    
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         var textField = UITextField()
-        let alert = UIAlertController(title: "Add new todoey Item", message: "", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Add new category", message: "", preferredStyle: .alert)
         
-        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            let newItem4 = Item(context: self.context)
-            newItem4.title = textField.text ?? "New Item"
-            newItem4.done = false
-            self.itemArray.append(newItem4)
-            self.saveItems()
+        let action = UIAlertAction(title: "Add Category", style: .default) { (action) in
+            let newCategory = Category(context: self.context)
+            newCategory.name = textField.text ?? "new Category"
+            self.categoryArray.append(newCategory)
+            self.saveCategory()
         }
         alert.addTextField { (alertTextField) in
-            alertTextField.placeholder = "Create New Item"
+            alertTextField.placeholder = "Create New Category"
             textField = alertTextField
         }
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
     }
     
-    func saveItems() {
+    func saveCategory() {
         do {
             try context.save()
         } catch {
@@ -75,22 +65,22 @@ class TodoListViewController: UITableViewController {
         self.tableView.reloadData()
     }
     
-    func loadItems(with request : NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItems(with request : NSFetchRequest<Category> = Category.fetchRequest()) {
         do {
-            itemArray = try context.fetch(request)
+            categoryArray = try context.fetch(request)
             self.tableView.reloadData()
         } catch {
             print("cant fetch data from sql \(error)")
         }
     }
-    
 }
-extension TodoListViewController: UISearchBarDelegate {
+
+extension CategoryViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
-        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        let request : NSFetchRequest<Category> = Category.fetchRequest()
+        let predicate = NSPredicate(format: "name CONTAINS[cd] %@", searchBar.text!)
         request.predicate = predicate
-        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+        let sortDescriptor = NSSortDescriptor(key: "name", ascending: true)
         request.sortDescriptors = [sortDescriptor]
         loadItems(with: request)
         tableView.reloadData()
@@ -106,5 +96,3 @@ extension TodoListViewController: UISearchBarDelegate {
         
     }
 }
-
-
